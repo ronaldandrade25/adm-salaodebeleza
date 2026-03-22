@@ -40,13 +40,13 @@ import { initConfiguracoesTab } from "./configuracoes.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
- apiKey: "AIzaSyDgaoVZK-5TF5xDFulLISridU9IXbmEYgg",
+  apiKey: "AIzaSyDgaoVZK-5TF5xDFulLISridU9IXbmEYgg",
   authDomain: "barbearia-agenda-fe2a7.firebaseapp.com",
   projectId: "barbearia-agenda-fe2a7",
   storageBucket: "barbearia-agenda-fe2a7.firebasestorage.app",
   messagingSenderId: "876658896099",
   appId: "1:876658896099:web:6a361416ed84fd636f29d6",
-  measurementId: "G-NJ4ETW1TNZ"
+  measurementId: "G-NJ4ETW1TNZ",
 };
 
 const app = initializeApp(firebaseConfig);
@@ -76,20 +76,20 @@ export const formatDate = (tsOrDate) => {
   return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
 };
 
-// ✅ helper: YYYY-MM-DD -> DD/MM/YYYY
+// ✅ NOVO helper: YYYY-MM-DD -> DD/MM/YYYY
 export const ymdToDateStr = (ymd) => {
   if (!ymd) return "";
   const [y, m, d] = String(ymd).split("-");
   return `${pad2(d)}/${pad2(m)}/${y}`;
 };
 
-// ✅ helper: hoje em YYYY-MM-DD
+// ✅ NOVO helper: hoje em YYYY-MM-DD
 export const todayYmd = () => {
   const d = new Date();
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 };
 
-// ✅ helper: parse dinheiro seguro
+// ✅ NOVO helper: parse dinheiro seguro
 export function parseMoney(v) {
   if (v == null) return 0;
   const s = String(v)
@@ -243,7 +243,7 @@ export async function waitForAuth() {
 }
 
 /* ========= Estado compartilhado ========= */
-export const BOOKING_URL = "";  // link para o site de agendamento externo (se houver)
+export const BOOKING_URL = ""; // link do site de agendamento externo (se houver)
 
 export const PAYMENT_METHODS = [
   "PIX",
@@ -354,7 +354,6 @@ export function populateProfessionalSelects() {
   const relProf = $("#relProf");
   const pdvSaleProfSelect = $("#pdvSaleProf");
 
-  // ========= AGENDA =========
   if (profissionalSelect) {
     const current = (profissionalSelect.value || "").trim();
     if (!list.length) {
@@ -372,7 +371,6 @@ export function populateProfessionalSelects() {
     }
   }
 
-  // ========= RELATÓRIOS =========
   if (relProf) {
     const current = (relProf.value || "").trim();
     if (!list.length) {
@@ -390,7 +388,6 @@ export function populateProfessionalSelects() {
     }
   }
 
-  // ========= PDV =========
   if (pdvSaleProfSelect) {
     const current = (pdvSaleProfSelect.value || "").trim();
     const firstColecao = list[0]?.colecao || ONLY_PRO.colecao;
@@ -431,7 +428,6 @@ function startGlobalListeners() {
   if (window.__globalListenersStarted) return;
   window.__globalListenersStarted = true;
 
-  // ✅ Profissionais
   onSnapshot(
     query(COL_PROF, orderBy("nome")),
     (snap) => {
@@ -458,7 +454,6 @@ function startGlobalListeners() {
     (err) => console.error("Erro listener profissionais (global):", err)
   );
 
-  // ✅ Serviços
   onSnapshot(
     query(COL_SERVICOS, orderBy("nome")),
     (snap) => {
@@ -595,6 +590,13 @@ async function init() {
   bindResumoGeralModal();
 
   await waitForAuth();
+
+  // ✅ AJUSTE:
+  // Deixa datas padrão e selects prontos antes de iniciar as abas,
+  // especialmente a aba de relatórios.
+  setDefaultDates();
+  populateProfessionalSelects();
+
   startGlobalListeners();
 
   initAgendaTab();
@@ -603,7 +605,6 @@ async function init() {
   initPdvTab();
   initConfiguracoesTab();
 
-  setDefaultDates();
   showTab("agenda");
 }
 
