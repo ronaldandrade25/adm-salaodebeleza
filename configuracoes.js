@@ -975,6 +975,40 @@ export function initConfiguracoesTab() {
       }
     });
 
+    // ✅ EXCLUIR SERVIÇO
+    svcTbody?.addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-svc-del]");
+      if (!btn) return;
+
+      const id = btn.dataset.svcDel;
+      if (!id) return;
+
+      mainModal.show({
+        title: "Excluir serviço",
+        body: "<p>Deseja remover este serviço?</p>",
+        buttons: [
+          { text: "Cancelar", class: "btn-light" },
+          {
+            text: "Excluir",
+            class: "btn-del",
+            onClick: async () => {
+              try {
+                await waitForAuth();
+                await runWithQuickRetry(() => deleteDoc(doc(db, "servicos", id)));
+                showNotification("Serviço removido!", "success");
+                return true;
+              } catch (err) {
+                console.error(err);
+                if (isPermissionError(err)) showPermissionHint("remover serviço");
+                else showNotification("Erro ao remover serviço.", "error");
+                return false;
+              }
+            },
+          },
+        ],
+      });
+    });
+
     // ✅ start
     resetProfForm();
     hideFileInputsEverywhere();
