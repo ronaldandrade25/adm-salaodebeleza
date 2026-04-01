@@ -1188,3 +1188,256 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================
+   AJUSTE: NAVEGAÇÃO LATERAL MODERNA E RESPONSIVA
+   ========================================== */
+
+body {
+  overflow-x: hidden;
+}
+
+.app-header {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  bottom: 20px;
+  width: 290px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border: 1px solid rgba(233, 30, 99, 0.12);
+  border-radius: 28px;
+  backdrop-filter: blur(24px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(252, 228, 236, 0.92));
+  box-shadow: 0 24px 60px rgba(233, 30, 99, 0.10);
+  overflow-y: auto;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.app-nav {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  width: 100%;
+  height: 100%;
+}
+
+.logo {
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-img {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+}
+
+.logo-text {
+  min-width: 0;
+}
+
+.logo-text span {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+
+.logo-text small {
+  margin-top: 4px;
+}
+
+.tabs-in-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  margin-left: 0;
+  width: 100%;
+}
+
+.tab-btn {
+  width: 100%;
+  min-height: 52px;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid transparent;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.tab-btn span {
+  flex: 1;
+}
+
+.tab-btn i {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.tab-btn:hover {
+  background: rgba(233, 30, 99, 0.08);
+  border-color: rgba(233, 30, 99, 0.10);
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 187, 208, 0.32));
+  border-color: rgba(233, 30, 99, 0.18);
+  box-shadow: 0 16px 32px rgba(233, 30, 99, 0.10);
+}
+
+.mobile-topbar,
+.app-overlay,
+.sidebar-toggle,
+.sidebar-close {
+  display: none;
+}
+
+.page-main {
+  max-width: none;
+  margin: 0 24px 0 334px;
+  padding: 28px 0 40px;
+}
+
+.section {
+  width: 100%;
+}
+
+.card,
+.kpi,
+.timeslot,
+.modal-dialog,
+.auth-card {
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 1200px) {
+  .app-header {
+    width: 270px;
+  }
+
+  .page-main {
+    margin-left: 314px;
+  }
+}
+
+@media (max-width: 960px) {
+  .app-header {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(88vw, 310px);
+    border-radius: 0 26px 26px 0;
+    transform: translateX(-105%);
+    transition: transform 0.28s ease;
+  }
+
+  body.sidebar-open .app-header {
+    transform: translateX(0);
+  }
+
+  .mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 990;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(18px);
+    border-bottom: 1px solid rgba(233, 30, 99, 0.10);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+  }
+
+  .mobile-topbar-title {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-topbar-title span {
+    font-weight: 700;
+    color: var(--primary-color);
+    line-height: 1.1;
+  }
+
+  .mobile-topbar-title small {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    line-height: 1.1;
+  }
+
+  .sidebar-toggle,
+  .sidebar-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(233, 30, 99, 0.14);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.94);
+    color: var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(233, 30, 99, 0.10);
+  }
+
+  .sidebar-toggle i,
+  .sidebar-close i {
+    font-size: 1.4rem;
+  }
+
+  .app-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 980;
+    background: rgba(28, 19, 23, 0.38);
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.25s ease;
+  }
+
+  body.sidebar-open .app-overlay {
+    opacity: 1;
+    visibility: visible;
+    display: block;
+  }
+
+  .page-main {
+    margin: 0;
+    padding: 18px 16px 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .tab-btn {
+    min-height: 50px;
+    padding: 13px 14px;
+    font-size: 0.92rem;
+  }
+
+  .logo-img {
+    width: 54px;
+    height: 54px;
+  }
+
+  .logo-text span {
+    font-size: 1rem;
+  }
+}

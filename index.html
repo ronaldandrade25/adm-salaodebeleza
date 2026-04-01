@@ -12,7 +12,7 @@
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" />
 
     <!-- Estilos -->
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="./style.css" />
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -22,9 +22,9 @@
     <!-- Notificações (toasts) -->
     <div id="notification-container"></div>
 
-    <!-- Header / Navegação -->
-    <header class="app-header">
-        <nav class="app-nav">
+    <!-- Header / Navegação lateral -->
+    <header class="app-header" id="appSidebar">
+        <div class="sidebar-head">
             <a href="#" class="logo" onclick="return false;">
                 <img src="./assets/logo-salao.png" alt="Logo do Salão de Beleza" class="logo-img" />
                 <div class="logo-text">
@@ -33,25 +33,49 @@
                 </div>
             </a>
 
+            <button type="button" class="sidebar-toggle sidebar-close" id="sidebarClose" aria-label="Fechar menu">
+                <i class="bx bx-x"></i>
+            </button>
+        </div>
+
+        <nav class="app-nav" aria-label="Menu principal">
             <div class="tabs-in-header">
                 <button type="button" class="tab-btn" data-tab="agenda">
-                    <i class="bx bx-calendar"></i> Agenda
+                    <i class="bx bx-calendar"></i>
+                    <span>Agenda</span>
                 </button>
                 <button type="button" class="tab-btn" data-tab="reports">
-                    <i class="bx bx-bar-chart"></i> Relatórios
+                    <i class="bx bx-bar-chart"></i>
+                    <span>Relatórios</span>
                 </button>
                 <button type="button" class="tab-btn" data-tab="clientes">
-                    <i class="bx bx-user-pin"></i> Clientes / Clube de Beleza
+                    <i class="bx bx-user-pin"></i>
+                    <span>Clientes / Clube de Beleza</span>
                 </button>
                 <button type="button" class="tab-btn" data-tab="pdv">
-                    <i class="bx bx-cart"></i> PDV / Produtos
+                    <i class="bx bx-cart"></i>
+                    <span>PDV / Produtos</span>
                 </button>
                 <button type="button" class="tab-btn" data-tab="config">
-                    <i class="bx bx-cog"></i> Configurações
+                    <i class="bx bx-cog"></i>
+                    <span>Configurações</span>
                 </button>
             </div>
         </nav>
     </header>
+
+    <div class="mobile-topbar">
+        <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Abrir menu">
+            <i class="bx bx-menu"></i>
+        </button>
+
+        <div class="mobile-topbar-title">
+            <span>Salão de Beleza</span>
+            <small>Painel Administrativo</small>
+        </div>
+    </div>
+
+    <div class="app-overlay" id="appOverlay"></div>
 
     <!-- MAIN: Agenda -->
     <main id="agendaMain" class="page-main">
@@ -1067,6 +1091,39 @@
             window.addEventListener("load", syncTimes);
         })();
     </script>
+
+    <script>
+        (function () {
+            const body = document.body;
+            const sidebarToggle = document.getElementById("sidebarToggle");
+            const sidebarClose = document.getElementById("sidebarClose");
+            const appOverlay = document.getElementById("appOverlay");
+            const tabButtons = document.querySelectorAll(".tab-btn");
+
+            function openSidebar() {
+                body.classList.add("sidebar-open");
+            }
+
+            function closeSidebar() {
+                body.classList.remove("sidebar-open");
+            }
+
+            sidebarToggle?.addEventListener("click", openSidebar);
+            sidebarClose?.addEventListener("click", closeSidebar);
+            appOverlay?.addEventListener("click", closeSidebar);
+
+            tabButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    if (window.innerWidth <= 960) closeSidebar();
+                });
+            });
+
+            window.addEventListener("resize", () => {
+                if (window.innerWidth > 960) closeSidebar();
+            });
+        })();
+    </script>
+
 </body>
 
 </html>
