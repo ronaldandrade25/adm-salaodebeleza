@@ -56,6 +56,10 @@
                     <i class="bx bx-cart"></i>
                     <span>PDV / Produtos</span>
                 </button>
+                <button type="button" class="tab-btn" data-tab="contasapagar">
+                    <i class="bx bx-wallet"></i>
+                    <span>Contas a pagar</span>
+                </button>
                 <button type="button" class="tab-btn" data-tab="config">
                     <i class="bx bx-cog"></i>
                     <span>Configurações</span>
@@ -151,7 +155,6 @@
                         <option value="todos">Todos os profissionais</option>
                         <option value="reservas_rodrigotorre2">Rodrigo Torre2</option>
                     </select>
-                    
                 </div>
 
                 <div class="field">
@@ -190,7 +193,6 @@
                 </div>
             </div>
 
-            <!-- KPIs (serviços) -->
             <div class="kpis">
                 <div class="kpi">
                     <span class="kpi-label">Atendimentos</span>
@@ -256,7 +258,6 @@
                 </div>
             </div>
 
-            <!-- Vendas de produtos por profissional -->
             <div class="card card-product-report">
                 <div class="card-header">
                     <h2>Vendas de produtos por profissional</h2>
@@ -280,7 +281,6 @@
                 </div>
             </div>
 
-            <!-- ✅✅✅ NOVO (VISÍVEL NA ABA): Resumo geral de gestão -->
             <div class="card card-management">
                 <div class="card-header">
                     <h2>Resumo geral de gestão</h2>
@@ -342,7 +342,6 @@
                 </div>
             </div>
 
-            <!-- ✅✅✅ NOVO (VISÍVEL NA ABA): Saídas / Despesas -->
             <div class="card card-expenses" style="margin-top:14px;">
                 <div class="card-header">
                     <h2>Saídas / Despesas</h2>
@@ -650,6 +649,165 @@
         </section>
     </main>
 
+    <!-- MAIN: Contas a Pagar -->
+    <main id="contasapagarMain" class="page-main hidden-block">
+        <section class="section">
+            <header class="section-header">
+                <h1>Contas a Pagar</h1>
+                <p>Gerencie contas, parcelas e prazos de pagamento do salão.</p>
+            </header>
+
+            <div class="kpis">
+                <div class="kpi">
+                    <span class="kpi-label">Total a pagar</span>
+                    <span id="cpTotalPagar" class="kpi-value">R$ 0,00</span>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Contas pendentes</span>
+                    <span id="cpTotalPendentes" class="kpi-value">R$ 0,00</span>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Contas atrasadas</span>
+                    <span id="cpTotalAtrasadas" class="kpi-value">R$ 0,00</span>
+                </div>
+                <div class="kpi">
+                    <span class="kpi-label">Contas pagas este mês</span>
+                    <span id="cpTotalPagasMes" class="kpi-value">R$ 0,00</span>
+                </div>
+            </div>
+
+            <div class="grid">
+                <div class="left-column">
+                    <div class="card">
+                        <div class="card-header">
+                            <h2>Cadastrar Nova Conta</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-grid">
+                                <div class="field">
+                                    <label for="cpFornecedor">Nome/Fornecedor *</label>
+                                    <input id="cpFornecedor" type="text" placeholder="Ex.: Energia, aluguel, cosméticos..." />
+                                </div>
+
+                                <div class="field">
+                                    <label for="cpDescricao">Descrição</label>
+                                    <input id="cpDescricao" type="text" placeholder="Ex.: Compra de produtos, internet, aluguel..." />
+                                </div>
+
+                                <div class="field">
+                                    <label for="cpCategoria">Categoria</label>
+                                    <select id="cpCategoria">
+                                        <option value="">Selecione</option>
+                                        <option value="Aluguel">Aluguel</option>
+                                        <option value="Energia">Energia</option>
+                                        <option value="Internet">Internet</option>
+                                        <option value="Água">Água</option>
+                                        <option value="Produtos / insumos">Produtos / insumos</option>
+                                        <option value="Folha / comissões">Folha / comissões</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Impostos">Impostos</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
+
+                                <div class="field">
+                                    <label for="cpValorTotal">Valor total (R$) *</label>
+                                    <input id="cpValorTotal" type="number" step="0.01" placeholder="0.00" />
+                                </div>
+
+                                <div class="cp-form-row">
+                                    <div class="field">
+                                        <label for="cpParcelas">Parcelas</label>
+                                        <input id="cpParcelas" type="number" min="1" value="1" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="cpFormaPagamento">Forma de pagamento</label>
+                                        <select id="cpFormaPagamento">
+                                            <option value="">Selecione</option>
+                                            <option value="PIX">PIX</option>
+                                            <option value="Dinheiro">Dinheiro</option>
+                                            <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                            <option value="Cartão de Débito">Cartão de Débito</option>
+                                            <option value="Boleto">Boleto</option>
+                                            <option value="Transferência">Transferência</option>
+                                            <option value="Outro">Outro</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="cpDataPrimeiroVencimento">1º vencimento *</label>
+                                        <input id="cpDataPrimeiroVencimento" type="date" />
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="cpStatus">Status inicial</label>
+                                        <select id="cpStatus">
+                                            <option value="pendente">Pendente</option>
+                                            <option value="pago">Pago</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                                    <button id="cpSalvarBtn" class="btn btn-edit" type="button">
+                                        <i class="bx bx-save"></i> Salvar conta
+                                    </button>
+                                    <button id="cpLimparBtn" class="btn btn-light" type="button">
+                                        <i class="bx bx-eraser"></i> Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-column">
+                    <div class="card">
+                        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <h2>Contas a Pagar</h2>
+
+                            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                                <div class="field" style="min-width:240px;">
+                                    <label for="cpSearch" style="display:none;">Buscar conta</label>
+                                    <input id="cpSearch" type="text" placeholder="Buscar conta..." />
+                                </div>
+
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button class="btn btn-light cp-filter-btn" data-cp-filter="todas" type="button">Todas</button>
+                                    <button class="btn btn-light cp-filter-btn" data-cp-filter="pendente" type="button">Pendentes</button>
+                                    <button class="btn btn-light cp-filter-btn" data-cp-filter="atrasada" type="button">Atrasadas</button>
+                                    <button class="btn btn-light cp-filter-btn" data-cp-filter="paga" type="button">Pagas</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-body table-wrapper">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Fornecedor</th>
+                                        <th>Categoria</th>
+                                        <th>Valor</th>
+                                        <th>Parcelas</th>
+                                        <th>Vencimento</th>
+                                        <th>Status</th>
+                                        <th style="width:140px;text-align:right;">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cpTbody">
+                                    <tr>
+                                        <td colspan="7" class="loading-row">Nenhuma conta encontrada.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
     <!-- MAIN: Configurações -->
     <main id="configMain" class="page-main hidden-block">
         <section class="section">
@@ -660,7 +818,6 @@
 
             <div class="grid-2">
 
-                <!-- ✅✅✅ Funcionamento (1 horário visível + pausa almoço + 1 botão visível) -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-header">
                         <h2>Funcionamento (dias + horários + intervalo + pausa)</h2>
@@ -671,7 +828,6 @@
 
                     <div class="card-body">
                         <div class="form-grid">
-                            <!-- Dias (mantém #cfgWeekdays) -->
                             <div class="field" style="grid-column: 1 / -1;">
                                 <label>Selecione os dias</label>
                                 <div id="cfgWeekdays" style="display:flex;gap:12px;flex-wrap:wrap;">
@@ -699,7 +855,6 @@
                                 </div>
                             </div>
 
-                            <!-- ✅ ÚNICO horário visível (mantém IDs #cfgDayStart / #cfgDayEnd) -->
                             <div class="field">
                                 <label for="cfgDayStart">Início do dia</label>
                                 <input id="cfgDayStart" type="time" value="09:00" />
@@ -710,14 +865,12 @@
                                 <input id="cfgDayEnd" type="time" value="19:00" />
                             </div>
 
-                            <!-- ✅ Intervalo (min) -->
                             <div class="field">
                                 <label for="cfgIntervalMin">Intervalo (min)</label>
                                 <input id="cfgIntervalMin" type="number" min="5" step="5" value="25" />
                                 <small class="muted">Ex.: 15, 20, 25, 30…</small>
                             </div>
 
-                            <!-- ✅ Pausa almoço (NOVO) -->
                             <div class="field">
                                 <label for="cfgBreakStart">Pausa (início)</label>
                                 <input id="cfgBreakStart" type="time" placeholder="12:00" />
@@ -730,7 +883,6 @@
                                 <small class="muted">Opcional</small>
                             </div>
 
-                            <!-- ✅ CAMPOS OCULTOS (mantém IDs do JS antigo: #cfgInicio / #cfgFim) -->
                             <div class="field" style="display:none;">
                                 <label for="cfgInicio">Início do painel</label>
                                 <input id="cfgInicio" type="time" value="09:00" />
@@ -741,15 +893,12 @@
                                 <input id="cfgFim" type="time" value="19:00" />
                             </div>
 
-                            <!-- ✅ BOTÃO VISÍVEL: salva TUDO (sem duplicar na tela) -->
-                            <!-- Ele mantém id cfgSalvarSemana (JS escuta), e dispara também o cfgSalvarHorario escondido -->
                             <div class="field" style="grid-column: 1 / -1; display:flex; gap:10px; flex-wrap:wrap;">
                                 <button id="cfgSalvarSemana" class="btn btn-edit" type="button"
                                     onclick="document.getElementById('cfgSalvarHorario')?.click()">
                                     <i class="bx bx-save"></i> Salvar funcionamento
                                 </button>
 
-                                <!-- ✅ BOTÃO OCULTO: existe pro JS, mas não aparece -->
                                 <button id="cfgSalvarHorario" class="btn btn-light" type="button" style="display:none;">
                                     <i class="bx bx-save"></i> Salvar (painel)
                                 </button>
@@ -761,9 +910,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- ✅✅✅ /Funcionamento -->
 
-                <!-- Exceções -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <div class="card-header">
                         <h2>Exceções (folgas / horários especiais)</h2>
@@ -821,7 +968,6 @@
                     </div>
                 </div>
 
-                <!-- Profissionais -->
                 <div class="card">
                     <div class="card-header">
                         <h2>Profissionais</h2>
@@ -877,7 +1023,7 @@
                                 </thead>
                                 <tbody id="profTbody">
                                     <tr>
-                                        <td colspan="5" class="loading-row">Carregando profissionais...</td>
+                                        <td colspan="5" class="loading-row">Carregando profissionais.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -885,17 +1031,16 @@
                     </div>
                 </div>
 
-                <!-- Serviços -->
                 <div class="card">
                     <div class="card-header">
                         <h2>Serviços</h2>
-                        <p class="card-subtitle">Cadastre serviços (valor e tempo em minutos).</p>
+                        <p class="card-subtitle">Cadastre serviços, valor, duração e status.</p>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
                             <div class="field">
                                 <label for="svcNome">Nome</label>
-                                <input id="svcNome" placeholder="Ex.: Escova, Manicure, Hidratação..." />
+                                <input id="svcNome" placeholder="Ex.: Escova, Manicure, Hidratação." />
                             </div>
                             <div class="field">
                                 <label for="svcValor">Valor (R$)</label>
@@ -920,12 +1065,12 @@
                                         <th>Serviço</th>
                                         <th>Valor</th>
                                         <th>Tempo</th>
-                                        <th style="width:120px;text-align:right;">Ações</th>
+                                        <th style="width:140px;text-align:right;">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody id="svcTbody">
                                     <tr>
-                                        <td colspan="4" class="loading-row">Carregando serviços...</td>
+                                        <td colspan="4" class="loading-row">Carregando serviços.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -937,83 +1082,94 @@
         </section>
     </main>
 
-    <!-- ✅✅✅ MODAL: Resumo Geral + Saídas / Despesas (mantido como você enviou) -->
+    <!-- Modal Resumo geral / Despesas -->
     <div id="resumoGeralModal" class="modal hidden">
-        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="resumoGeralTitle">
+        <div class="modal-dialog" style="max-width:1100px;">
             <header class="modal-header">
-                <h3 id="resumoGeralTitle">Resumo geral • Saídas / Despesas</h3>
+                <h3>Resumo geral / Despesas</h3>
                 <button id="resumoGeralClose" class="modal-close" type="button">&times;</button>
             </header>
+
             <div class="modal-body">
-                <div class="kpis" style="margin-top:0;">
-                    <div class="kpi">
-                        <span class="kpi-label">Atendimentos</span>
-                        <span id="rgKpiQtd" class="kpi-value">0</span>
+                <div class="kpis kpis-gestao">
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Total de atendimentos (serviços)</span>
+                        <span id="mgmTotalAppointments" class="kpi-value">0</span>
                     </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Serviços</span>
-                        <span id="rgKpiServicos" class="kpi-value">R$ 0,00</span>
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Faturamento em serviços</span>
+                        <span id="mgmServicesRevenue" class="kpi-value">R$ 0,00</span>
                     </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Produtos</span>
-                        <span id="rgKpiProdutos" class="kpi-value">R$ 0,00</span>
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Faturamento em produtos</span>
+                        <span id="mgmProductsRevenue" class="kpi-value">R$ 0,00</span>
                     </div>
-                    <div class="kpi">
-                        <span class="kpi-label">Despesas</span>
-                        <span id="rgKpiDespesas" class="kpi-value">R$ 0,00</span>
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Qtd. total de produtos vendidos</span>
+                        <span id="mgmProductsQty" class="kpi-value">0</span>
                     </div>
-                    <div class="kpi">
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Faturamento total</span>
+                        <span id="mgmOverallRevenue" class="kpi-value">R$ 0,00</span>
+                    </div>
+                    <div class="kpi kpi-gestao">
+                        <span class="kpi-label">Total de saídas</span>
+                        <span id="mgmExpensesTotal" class="kpi-value">R$ 0,00</span>
+                    </div>
+                    <div class="kpi kpi-gestao">
                         <span class="kpi-label">Resultado líquido</span>
-                        <span id="rgKpiLiquido" class="kpi-value">R$ 0,00</span>
+                        <span id="mgmNetResult" class="kpi-value">R$ 0,00</span>
                     </div>
                 </div>
 
-                <hr style="border:0;border-top:1px solid rgba(148,163,184,0.12);margin:14px 0;">
-
                 <div class="card" style="box-shadow:none;border:1px solid rgba(148,163,184,0.14);">
                     <div class="card-header">
-                        <h2 style="margin:0;">Registrar despesa</h2>
+                        <h2 style="margin:0;">Cadastrar despesa</h2>
                     </div>
                     <div class="card-body">
                         <div class="form-grid">
-                            <div class="field">
-                                <label for="expData">Data</label>
-                                <input id="expData" type="date" />
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="expData">Data</label>
+                                    <input id="expData" type="date" />
+                                </div>
+                                <div class="field">
+                                    <label for="expCategoria">Categoria</label>
+                                    <select id="expCategoria">
+                                        <option value="">Selecione</option>
+                                        <option value="Aluguel">Aluguel</option>
+                                        <option value="Contas fixas">Contas fixas</option>
+                                        <option value="Produtos / insumos">Produtos / insumos</option>
+                                        <option value="Folha / comissões">Folha / comissões</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Outros">Outros</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="field">
-                                <label for="expCategoria">Categoria</label>
-                                <select id="expCategoria">
-                                    <option value="aluguel">Aluguel</option>
-                                    <option value="agua">Água</option>
-                                    <option value="luz">Luz</option>
-                                    <option value="internet">Internet</option>
-                                    <option value="material">Material / Insumos</option>
-                                    <option value="manutencao">Manutenção</option>
-                                    <option value="marketing">Marketing</option>
-                                    <option value="impostos">Impostos / Taxas</option>
-                                    <option value="outros" selected>Outros</option>
-                                </select>
+
+                            <div class="form-row">
+                                <div class="field">
+                                    <label for="expDescricao">Descrição</label>
+                                    <input id="expDescricao" type="text" placeholder="Ex.: aluguel, luz, compra de materiais..." />
+                                </div>
+                                <div class="field">
+                                    <label for="expValor">Valor (R$)</label>
+                                    <input id="expValor" type="number" step="0.01" placeholder="0,00" />
+                                </div>
                             </div>
-                            <div class="field">
-                                <label for="expDesc">Descrição</label>
-                                <input id="expDesc" placeholder="Ex: compra de cosméticos, esmaltes, aluguel, etc." />
+
+                            <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+                                <button id="expSalvarBtn" class="btn btn-edit">
+                                    <i class="bx bx-save"></i> Salvar despesa
+                                </button>
+                                <button id="expLimparBtn" class="btn btn-light">
+                                    <i class="bx bx-eraser"></i> Limpar
+                                </button>
                             </div>
-                            <div class="field">
-                                <label for="expValor">Valor (R$)</label>
-                                <input id="expValor" type="number" step="0.01" placeholder="0,00" />
-                            </div>
+                            <small class="muted" style="display:block;margin-top:8px;">
+                                Obs: o JS vai preencher e salvar essas despesas no Firestore (quando você plugar).
+                            </small>
                         </div>
-                        <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
-                            <button id="expSalvarBtn" class="btn btn-edit">
-                                <i class="bx bx-save"></i> Salvar despesa
-                            </button>
-                            <button id="expLimparBtn" class="btn btn-light">
-                                <i class="bx bx-eraser"></i> Limpar
-                            </button>
-                        </div>
-                        <small class="muted" style="display:block;margin-top:8px;">
-                            Obs: o JS vai preencher e salvar essas despesas no Firestore (quando você plugar).
-                        </small>
                     </div>
                 </div>
 
@@ -1066,7 +1222,6 @@
     <!-- Script principal -->
     <script type="module" src="./firebase.js"></script>
 
-    <!-- ✅✅✅ AJUSTE: sincroniza 1 horário visível -> horários ocultos do painel -->
     <script>
         (function () {
             function syncTimes() {
@@ -1080,14 +1235,12 @@
                 panelEnd.value = dayEnd.value || panelEnd.value;
             }
 
-            // sincroniza ao abrir/alterar
             document.addEventListener("change", (e) => {
                 if (e.target && (e.target.id === "cfgDayStart" || e.target.id === "cfgDayEnd")) {
                     syncTimes();
                 }
             });
 
-            // sincroniza uma vez ao carregar
             window.addEventListener("load", syncTimes);
         })();
     </script>

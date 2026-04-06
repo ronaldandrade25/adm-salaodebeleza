@@ -1441,3 +1441,195 @@ body {
     font-size: 1rem;
   }
 }
+
+
+/* =========================
+   CONTAS A PAGAR
+   ========================= */
+
+#contasapagarMain .kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#contasapagarMain .cp-form-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+#contasapagarMain .cp-form-row .field {
+  min-width: 0;
+}
+
+#contasapagarMain .cp-form-row .field input,
+#contasapagarMain .cp-form-row .field select {
+  width: 100%;
+}
+
+#contasapagarMain select,
+#contasapagarMain input[type="date"],
+#contasapagarMain input[type="number"],
+#contasapagarMain input[type="text"] {
+  width: 100%;
+  min-width: 0;
+}
+
+#contasapagarMain .card-header h2 {
+  white-space: nowrap;
+}
+
+#contasapagarMain .table td,
+#contasapagarMain .table th {
+  white-space: nowrap;
+}
+
+#contasapagarMain .table td:last-child,
+#contasapagarMain .table th:last-child {
+  text-align: right;
+}
+
+#contasapagarMain .left-column .card,
+#contasapagarMain .right-column .card {
+  height: 100%;
+}
+
+#contasapagarMain .right-column .card-body.table-wrapper {
+  min-height: 420px;
+}
+
+.cp-filter-btn.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-color: transparent;
+  color: var(--white);
+  box-shadow: 0 10px 24px rgba(233, 30, 99, 0.18);
+}
+
+.cp-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.cp-status-pendente {
+  background: rgba(217, 163, 95, 0.14);
+  border-color: rgba(217, 163, 95, 0.28);
+  color: #9a651d;
+}
+
+.cp-status-atrasada {
+  background: rgba(214, 90, 111, 0.12);
+  border-color: rgba(214, 90, 111, 0.22);
+  color: #b23a50;
+}
+
+.cp-status-paga {
+  background: rgba(72, 187, 120, 0.12);
+  border-color: rgba(72, 187, 120, 0.22);
+  color: #2e7d4c;
+}
+
+.cp-parcela-text {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.cp-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cp-actions .btn {
+  box-shadow: none;
+}
+
+.cp-actions .btn:hover {
+  transform: translateY(-1px);
+}
+
+#contasapagarMain .loading-row {
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  #contasapagarMain .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #contasapagarMain .cp-form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  #contasapagarMain .grid {
+    grid-template-columns: 1fr;
+  }
+
+  #contasapagarMain .right-column .card-body.table-wrapper {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  #contasapagarMain .kpis {
+    grid-template-columns: 1fr;
+  }
+
+  #contasapagarMain .cp-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  #contasapagarMain .table td:last-child,
+  #contasapagarMain .table th:last-child {
+    text-align: left;
+  }
+
+  .cp-actions {
+    justify-content: flex-start;
+  }
+}
+
+#contasapagarMain .cp-form-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+#contasapagarMain .cp-form-row .field {
+  min-width: 0;
+}
+
+#contasapagarMain .cp-form-row .field label {
+  white-space: normal;
+  line-height: 1.2;
+}
+
+#contasapagarMain .cp-form-row .field input,
+#contasapagarMain .cp-form-row .field select {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  #contasapagarMain .cp-form-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  #contasapagarMain .cp-form-row {
+    grid-template-columns: 1fr;
+  }
+}

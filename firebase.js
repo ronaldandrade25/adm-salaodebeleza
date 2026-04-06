@@ -37,16 +37,16 @@ import { initRelatoriosTab } from "./relatorios.js";
 import { initClientesTab } from "./clientes.js";
 import { initPdvTab } from "./pdv.js";
 import { initConfiguracoesTab } from "./configuracoes.js";
+import { initContasAPagarTab } from "./contasapagar.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
-  apiKey: "AIzaSyDgaoVZK-5TF5xDFulLISridU9IXbmEYgg",
-  authDomain: "barbearia-agenda-fe2a7.firebaseapp.com",
-  projectId: "barbearia-agenda-fe2a7",
-  storageBucket: "barbearia-agenda-fe2a7.firebasestorage.app",
-  messagingSenderId: "876658896099",
-  appId: "1:876658896099:web:6a361416ed84fd636f29d6",
-  measurementId: "G-NJ4ETW1TNZ",
+  apiKey: "AIzaSyDtQzqXUxf6ZS8KeO4ybUuzUytxOwB_jnc",
+  authDomain: "studio-beleza-45b1d.firebaseapp.com",
+  projectId: "studio-beleza-45b1d",
+  storageBucket: "studio-beleza-45b1d.firebasestorage.app",
+  messagingSenderId: "824436361158",
+  appId: "1:824436361158:web:66f96585cf4fd505bfd4c7"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -315,6 +315,7 @@ export const cfgExcecaoDoc = (ymd) => doc(db, "config", "excecoes", "dias", Stri
 // ✅ Collections para Gestão/Despesas
 export const COL_DESPESAS = collection(db, "despesas");
 export const COL_VENDAS = collection(db, "vendas");
+export const COL_CONTAS_APAGAR = collection(db, "contas_apagar");
 
 /* ========= Profissionais helpers ========= */
 export function getProfByColecao(colecao) {
@@ -562,6 +563,7 @@ function setDefaultDates() {
   const relAte = $("#relAte");
   const expenseDate = $("#expenseDate");
   const expData = $("#expData");
+  const cpDataPrimeiroVencimento = $("#cpDataPrimeiroVencimento");
 
   const hoje = new Date();
   const y = hoje.getFullYear();
@@ -576,6 +578,7 @@ function setDefaultDates() {
 
   if (expenseDate && !expenseDate.value) expenseDate.value = today;
   if (expData && !expData.value) expData.value = today;
+  if (cpDataPrimeiroVencimento && !cpDataPrimeiroVencimento.value) cpDataPrimeiroVencimento.value = today;
 }
 
 async function init() {
@@ -604,6 +607,7 @@ async function init() {
   initClientesTab();
   initPdvTab();
   initConfiguracoesTab();
+  initContasAPagarTab();
 
   showTab("agenda");
 }
