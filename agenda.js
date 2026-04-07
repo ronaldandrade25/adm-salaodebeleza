@@ -21,18 +21,11 @@ export function initAgendaTab() {
 
     if (!agendaGrid) return;
 
-    // evita duplicar listeners
     if (window.__agendaTabStarted) return;
     window.__agendaTabStarted = true;
 
-    // ============================
-    // CONFIG: passo padrão 30min
-    // ============================
     const STEP_MIN = 30;
 
-    // ============================
-    // Helpers de tempo (HH:mm)
-    // ============================
     function isValidHHmm(s) {
         return typeof s === "string" && /^\d{2}:\d{2}$/.test(s);
     }
@@ -63,20 +56,13 @@ export function initAgendaTab() {
     }
 
     function overlaps(aStart, aEnd, bStart, bEnd) {
-        // intervalos [start, end)
         return aStart < bEnd && bStart < aEnd;
     }
 
-    // prioridade: prof > geral > semana > fallback
     function pickTime({ prof, geral, semana, fallback }) {
         return normalizeTime(prof) || normalizeTime(geral) || normalizeTime(semana) || fallback;
     }
 
-    /**
-     * ✅ Geração de horários "certinha" (fim EXCLUSIVO)
-     * - Evita aparecer horário "sobrando"
-     * - Só gera horários onde o início do slot é < fim
-     */
     function safeGenerateHours(startHH, endHH, stepMin) {
         const start = hhmmToMin(startHH);
         const end = hhmmToMin(endHH);
@@ -102,30 +88,58 @@ export function initAgendaTab() {
         });
     }
 
-    // ============================
-    // Helpers de data / semana
-    // ============================
     function getWeekdayIndex(dateYmd) {
         const [y, m, d] = String(dateYmd).split("-").map(Number);
         const dt = new Date(y, (m || 1) - 1, d || 1);
-        return dt.getDay(); // 0 dom ... 6 sab
+        return dt.getDay();
     }
 
-    // ============================
-    // Exceções: tenta ler em múltiplos formatos
-    // ============================
+    function formatDateBr(ymd) {
+        if (!ymd) return "";
+        const [y, m, d] = String(ymd).split("-");
+        return `${d}/${m}/${y}`;
+    }
+
+    function sanitizePhoneForWhatsApp(phone) {
+        const digits = String(phone || "").replace(/\D/g, "");
+        if (!digits) return "";
+
+        if (digits.startsWith("55")) return digits;
+        return `55${digits}`;
+    }
+
+    function openWhatsAppForAppointment({ telefone, nome, servico, data, hora, profissional }) {
+        const number = sanitizePhoneForWhatsApp(telefone);
+
+        if (!number) {
+            showNotification("Esse cliente não possui telefone cadastrado.", "error");
+            return;
+        }
+
+        const message = encodeURIComponent(
+            `Olá ${nome || "cliente"}! 👋\n\n` +
+            `Seu agendamento está confirmado no salão ✨\n\n` +
+            `📅 Data: ${formatDateBr(data)}\n` +
+            `⏰ Horário: ${hora}\n` +
+            `💇 Serviço: ${servico || "Serviço"}\n` +
+            `👩‍🔧 Profissional: ${profissional || "-"}\n\n` +
+            `Se precisar de qualquer ajuste, me chama por aqui 💚`
+        );
+
+        const url = `https://wa.me/${number}?text=${message}`;
+        window.open(url, "_blank", "noopener");
+    }
+
     async function readExceptionGeral(ymd) {
-        // Formato A (recomendado): config/excecoes/dias/{YYYY-MM-DD}
         try {
             const snapA = await getDoc(doc(db, "config", "excecoes", "dias", ymd));
             if (snapA.exists()) return snapA.data() || null;
-        } catch (e) { }
+        } catch (e) {}
 
-        // Formato B: excecoes/{YYYY-MM-DD}
         try {
             const snapB = await getDoc(doc(db, "excecoes", ymd));
             if (snapB.exists()) return snapB.data() || null;
-        } catch (e) { }
+        } catch (e) {}
 
         return null;
     }
@@ -135,13 +149,10 @@ export function initAgendaTab() {
         try {
             const snap = await getDoc(doc(db, "profissionais", profId, "excecoes", ymd));
             if (snap.exists()) return snap.data() || null;
-        } catch (e) { }
+        } catch (e) {}
         return null;
     }
 
-    // ============================
-    // Lê disponibilidade (semana + exceções)
-    // ============================
     async function getDayAvailabilityForColecao(ymd, colecao) {
         await waitForAuth();
 
@@ -228,9 +239,6 @@ export function initAgendaTab() {
         return safeGenerateHours(av.inicio, av.fim, STEP_MIN);
     }
 
-    // ============================
-    // Hora filtro dinâmico
-    // ============================
     async function fillHoraFiltroDynamic({ keepSelection = true } = {}) {
         if (!horaFiltro) return;
 
@@ -255,9 +263,6 @@ export function initAgendaTab() {
         }
     }
 
-    // ============================
-    // Fetch agendamentos
-    // ============================
     async function fetchAppointmentsDayForColecao(dateYmd, colecao) {
         await waitForAuth();
         const rows = [];
@@ -289,7 +294,6 @@ export function initAgendaTab() {
             const bloqueado = !!v.bloqueado;
             const servicoNome = v.servicoNome || "";
             const telefone = v.clienteTelefone || v.telefoneCliente || v.phone || v.telefone || "";
-
             const tempoMin = Number(v.servicoTempoMin ?? v.tempoMin ?? 30) || 30;
 
             rows.push({
@@ -329,9 +333,6 @@ export function initAgendaTab() {
         return rows;
     }
 
-    // ============================
-    // Validação por duração (dinâmico)
-    // ============================
     function canPlaceServiceAtTime({
         startHH,
         serviceMin,
@@ -362,15 +363,11 @@ export function initAgendaTab() {
         return true;
     }
 
-    // ============================
-    // ✅ NOVO: ocupa slots por intervalo (duração do serviço)
-    // ============================
     function findOccupancyForSlot(slotHH, appointments) {
         const slotStart = hhmmToMin(slotHH);
         if (slotStart == null) return null;
         const slotEnd = slotStart + STEP_MIN;
 
-        // se houver sobreposição, esse slot está ocupado
         for (const a of (appointments || [])) {
             const aStart = hhmmToMin(a.hora);
             if (aStart == null) continue;
@@ -390,9 +387,6 @@ export function initAgendaTab() {
         return null;
     }
 
-    // ============================
-    // Render grid (30 em 30) + duração dinâmica
-    // ============================
     async function renderAgendaGrid(appointments, filterHour, ymd, colecaoSel) {
         const allowedHours = ymd ? await getAvailableHoursForSelection(ymd, colecaoSel) : [];
 
@@ -423,13 +417,9 @@ export function initAgendaTab() {
             return;
         }
 
-        // 🔥 aqui é o segredo: a grade olha "sobreposição" por duração
         agendaGrid.innerHTML = hoursToRender.map((h) => {
             const occ = findOccupancyForSlot(h, appointments);
 
-            // ============================
-            // Slot LIVRE
-            // ============================
             if (!occ) {
                 return `
           <div class="timeslot">
@@ -451,11 +441,7 @@ export function initAgendaTab() {
 
             const a = occ.appt;
 
-            // ============================
-            // Slot OCUPADO - BLOQUEIO
-            // ============================
             if (a.bloqueado && (!a.clienteNome || a.clienteNome === "—")) {
-                // se for continuação de um bloqueio (quase nunca, mas previne), só mostra ocupado
                 if (!occ.isStart) {
                     return `
             <div class="timeslot">
@@ -495,16 +481,12 @@ export function initAgendaTab() {
         `;
             }
 
-            // ============================
-            // Slot OCUPADO - AGENDAMENTO
-            // ============================
             const phoneInline = a.telefone
                 ? `<span style="color:#94a3b8;font-size:.85em;margin-left:10px">Tel: ${a.telefone}</span>`
                 : "";
 
             const durLabel = a.tempoMin ? ` • ${Number(a.tempoMin)} min` : "";
 
-            // Slot de continuação: mostra ocupação e remove ações de editar/excluir (pra não confundir)
             if (!occ.isStart) {
                 return `
           <div class="timeslot">
@@ -529,7 +511,8 @@ export function initAgendaTab() {
         `;
             }
 
-            // Slot inicial: mostra completo com ações
+            const hasPhone = String(a.telefone || "").trim().length > 0;
+
             return `
         <div class="timeslot">
           <div class="timeslot-header">
@@ -550,7 +533,22 @@ export function initAgendaTab() {
               </div>
               <div class="timeslot-prof">Profissional: ${a.profissional || "-"}</div>
             </div>
-            <div class="timeslot-actions">
+            <div class="timeslot-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
+              ${hasPhone ? `
+                <button
+                  class="btn btn-sm"
+                  style="background:#25D366;color:#fff;border-color:#25D366;"
+                  data-action="whatsapp-agenda"
+                  data-telefone="${String(a.telefone || "").replace(/"/g, '&quot;')}"
+                  data-nome="${String(a.clienteNome || "").replace(/"/g, '&quot;')}"
+                  data-servico="${String(a.servico || "").replace(/"/g, '&quot;')}"
+                  data-data="${ymd}"
+                  data-hora="${a.hora}"
+                  data-profissional="${String(a.profissional || "").replace(/"/g, '&quot;')}"
+                >
+                  <i class="bx bxl-whatsapp"></i>
+                </button>
+              ` : ""}
               <button class="btn btn-sm btn-edit" data-action="edit-agenda" data-id="${a.id}" data-colecao="${a.colecao}">
                 <i class="bx bx-pencil"></i>
               </button>
@@ -564,9 +562,6 @@ export function initAgendaTab() {
         }).join("");
     }
 
-    // ============================
-    // Buscar
-    // ============================
     async function buscarAgenda() {
         const ymd = dataFiltro?.value;
         if (!ymd) return;
@@ -587,9 +582,6 @@ export function initAgendaTab() {
         }
     }
 
-    // ============================
-    // Sync profissional -> recarrega
-    // ============================
     bindProfessionalSync({
         onAgendaChange: async () => {
             if (horaFiltro) horaFiltro.value = "";
@@ -614,7 +606,6 @@ export function initAgendaTab() {
         await buscarAgenda();
     });
 
-    // Abrir link externo
     $("#openBookingModal")?.addEventListener("click", () => {
         mainModal.show({
             title: "Abrir agendamentos",
@@ -650,7 +641,6 @@ export function initAgendaTab() {
         });
     });
 
-    // clique na agenda
     agendaGrid?.addEventListener("click", (e) => {
         const target = e.target.closest("[data-action]");
         if (!target) return;
@@ -660,6 +650,17 @@ export function initAgendaTab() {
 
         if (action === "edit-agenda") openEditAgendaModal(colecao, id);
         if (action === "cancel-agenda") cancelarAgendamento(colecao, id);
+
+        if (action === "whatsapp-agenda") {
+            openWhatsAppForAppointment({
+                telefone: target.dataset.telefone || "",
+                nome: target.dataset.nome || "",
+                servico: target.dataset.servico || "",
+                data: target.dataset.data || "",
+                hora: target.dataset.hora || "",
+                profissional: target.dataset.profissional || "",
+            });
+        }
 
         if (action === "schedule") {
             if (getSelectedColecao() === "todos") {
@@ -724,10 +725,8 @@ export function initAgendaTab() {
                         const forma = $("#newForma").value || "Outro";
                         const raclub = $("#newRaclub").checked;
                         const ymd = dataFiltro.value;
-
                         const tempoMin = Number($("#newTempoMin")?.value || 30) || 30;
 
-                        // valida conflito por duração do serviço (dinâmico)
                         try {
                             const av = await getDayAvailabilityForColecao(ymd, colecao);
                             if (!av.aberto) {
@@ -832,7 +831,6 @@ export function initAgendaTab() {
                 v.clienteNomeCompleto || [v.clienteNome, v.clienteSobrenome].filter(Boolean).join(" ") || v.cliente || "";
             const telefone = v.clienteTelefone || v.telefoneCliente || v.phone || v.telefone || "";
             const profLabel = v.profissional || getProfLabelByColecao(colecao);
-
             const tempoMinAtual = Number(v.servicoTempoMin ?? v.tempoMin ?? 30) || 30;
 
             mainModal.show({
@@ -888,18 +886,14 @@ export function initAgendaTab() {
                                 showNotification("Informe o nome do cliente.", "error");
                                 return false;
                             }
+
                             const telefoneEdit = ($("#editTelefone")?.value || "").trim();
                             const servico = $("#editServico").value.trim() || "Serviço";
                             const valor = Number($("#editValor").value || 0);
                             const forma = $("#editForma").value || "Outro";
                             const raclub = $("#editRaclub").checked;
-
                             const tempoMin = Number($("#editTempoMin")?.value || 30) || 30;
 
-                            const [firstName, ...rest] = cliente.split(" ");
-                            const lastName = rest.join(" ");
-
-                            // valida conflito por duração (considerando outros horários do dia)
                             try {
                                 const ymd = dataFiltro.value;
                                 const av = await getDayAvailabilityForColecao(ymd, colecao);
@@ -930,6 +924,9 @@ export function initAgendaTab() {
                                 return false;
                             }
 
+                            const [firstName, ...rest] = cliente.split(" ");
+                            const lastName = rest.join(" ");
+
                             const updateData = {
                                 clienteNomeCompleto: cliente,
                                 clienteNome: firstName,
@@ -943,7 +940,6 @@ export function initAgendaTab() {
                                 valor,
                                 pagamentoForma: forma,
                                 raclub: { status: raclub ? "membro" : "nao" },
-                                profissional: profLabel,
                                 updatedAt: serverTimestamp(),
                             };
 
@@ -954,6 +950,7 @@ export function initAgendaTab() {
                             } catch (err) {
                                 console.error(err);
                                 showNotification("Erro ao atualizar agendamento.", "error");
+                                return false;
                             }
                         },
                     },
@@ -982,28 +979,30 @@ export function initAgendaTab() {
             }
         } catch (err) {
             console.error(err);
-            showNotification("Erro ao carregar agendamento.", "error");
+            showNotification("Erro ao abrir edição do agendamento.", "error");
         }
     }
 
     async function cancelarAgendamento(colecao, id) {
         if (!colecao || !id) return;
+
         mainModal.show({
             title: "Cancelar agendamento",
-            body: "<p>Tem certeza que deseja desmarcar este horário?</p>",
+            body: `<p>Deseja realmente cancelar este agendamento?</p>`,
             buttons: [
                 { text: "Voltar", class: "btn-light" },
                 {
-                    text: "Desmarcar",
+                    text: "Cancelar agendamento",
                     class: "btn-del",
                     onClick: async () => {
                         try {
                             await deleteDoc(doc(db, colecao, id));
-                            showNotification("Agendamento cancelado.", "success");
+                            showNotification("Agendamento cancelado!", "success");
                             await buscarAgenda();
                         } catch (err) {
                             console.error(err);
                             showNotification("Erro ao cancelar agendamento.", "error");
+                            return false;
                         }
                     },
                 },
@@ -1011,148 +1010,94 @@ export function initAgendaTab() {
         });
     }
 
-    // Bloquear/desbloquear
-    async function bloquear(ymd, horas) {
-        await waitForAuth();
-        if (!ymd) return showNotification("Selecione a data.", "error");
-
-        const colecao = getSelectedColecao();
-        if (colecao === "todos") return showNotification("Selecione um profissional para bloquear horários.", "error");
-
-        const profLabel = getProfLabelByColecao(colecao);
-
-        const dayHours = await getAvailableHoursForSelection(ymd, colecao);
-
-        const slots = Array.isArray(horas)
-            ? horas
-            : horas
-                ? [horas]
-                : dayHours;
-
-        let criados = 0;
-        let pulados = 0;
-
-        for (const hh of slots) {
-            const id = toKey(ymd, hh);
-            const refDoc = doc(db, colecao, id);
-            const snap = await getDoc(refDoc);
-
-            if (snap.exists()) {
-                pulados++;
-                continue;
-            }
-
-            await setDoc(
-                refDoc,
-                { data: ymd, hora: hh, profissional: profLabel, bloqueado: true, servicoTempoMin: STEP_MIN, createdAt: serverTimestamp() },
-                { merge: true }
-            );
-            criados++;
-        }
-
-        showNotification(`Horários bloqueados: ${criados}. Já ocupados: ${pulados}.`, "success");
-        await buscarAgenda();
-    }
-
-    async function desbloquear(ymd, horas) {
-        await waitForAuth();
-        if (!ymd) return showNotification("Selecione a data.", "error");
-
-        const colecao = getSelectedColecao();
-        if (colecao === "todos") return showNotification("Selecione um profissional para desbloquear horários.", "error");
-
-        const dayHours = await getAvailableHoursForSelection(ymd, colecao);
-
-        const slots = Array.isArray(horas)
-            ? horas
-            : horas
-                ? [horas]
-                : dayHours;
-
-        let removidos = 0;
-        let mantidos = 0;
-
-        for (const hh of slots) {
-            const id = toKey(ymd, hh);
-            const refDoc = doc(db, colecao, id);
-            const snap = await getDoc(refDoc);
-            if (!snap.exists()) continue;
-
-            const v = snap.data() || {};
-            const hasClient = !!(v?.cliente || v?.clienteNome || v?.clienteNomeCompleto);
-
-            if (v?.bloqueado && !hasClient) {
-                await deleteDoc(refDoc);
-                removidos++;
-            } else {
-                mantidos++;
-            }
-        }
-
-        showNotification(`Horários liberados: ${removidos}. Mantidos por já estarem reservados: ${mantidos}.`, "success");
-        await buscarAgenda();
-    }
-
     bloquearBtn?.addEventListener("click", async () => {
-        const start = (horaFiltro?.value || "").trim();
-        const ymd = dataFiltro.value;
+        const time = horaFiltro?.value;
+        const ymd = dataFiltro?.value;
         const colecao = getSelectedColecao();
-        const dayHours = await getAvailableHoursForSelection(ymd, colecao);
 
-        const range = start ? [start] : dayHours;
-        bloquear(ymd, range);
+        if (!ymd) {
+            showNotification("Selecione a data.", "error");
+            return;
+        }
+
+        if (colecao === "todos") {
+            showNotification("Selecione um profissional para bloquear horário.", "error");
+            return;
+        }
+
+        if (!time) {
+            showNotification("Selecione um horário no filtro para bloquear.", "error");
+            return;
+        }
+
+        const refDoc = doc(db, colecao, toKey(ymd, time));
+        try {
+            await setDoc(refDoc, {
+                data: ymd,
+                hora: time,
+                profissional: getProfLabelByColecao(colecao),
+                bloqueado: true,
+                updatedAt: serverTimestamp(),
+                createdAt: serverTimestamp(),
+            }, { merge: true });
+
+            showNotification("Horário bloqueado!", "success");
+            await buscarAgenda();
+        } catch (err) {
+            console.error(err);
+            showNotification("Erro ao bloquear horário.", "error");
+        }
     });
 
     desbloquearBtn?.addEventListener("click", async () => {
-        const start = (horaFiltro?.value || "").trim();
-        const ymd = dataFiltro.value;
+        const time = horaFiltro?.value;
+        const ymd = dataFiltro?.value;
         const colecao = getSelectedColecao();
-        const dayHours = await getAvailableHoursForSelection(ymd, colecao);
 
-        const range = start ? [start] : dayHours;
-        desbloquear(ymd, range);
+        if (!ymd) {
+            showNotification("Selecione a data.", "error");
+            return;
+        }
+
+        if (colecao === "todos") {
+            showNotification("Selecione um profissional para desbloquear horário.", "error");
+            return;
+        }
+
+        if (!time) {
+            showNotification("Selecione um horário no filtro para desbloquear.", "error");
+            return;
+        }
+
+        const refDoc = doc(db, colecao, toKey(ymd, time));
+        try {
+            const snap = await getDoc(refDoc);
+            if (!snap.exists()) {
+                showNotification("Não existe bloqueio/agendamento nesse horário.", "error");
+                return;
+            }
+
+            const v = snap.data() || {};
+            if (!v.bloqueado) {
+                showNotification("Esse horário não está bloqueado.", "error");
+                return;
+            }
+
+            await deleteDoc(refDoc);
+            showNotification("Horário desbloqueado!", "success");
+            await buscarAgenda();
+        } catch (err) {
+            console.error(err);
+            showNotification("Erro ao desbloquear horário.", "error");
+        }
     });
 
-    // ============================
-    // INIT
-    // ============================
-
-    // Data padrão hoje (se vazio)
-    if (dataFiltro && !dataFiltro.value) {
-        const now = new Date();
-        const y = now.getFullYear();
-        const m = String(now.getMonth() + 1).padStart(2, "0");
-        const d = String(now.getDate()).padStart(2, "0");
-        dataFiltro.value = `${y}-${m}-${d}`;
-    }
-
-    // espera profissionais carregarem
-    async function waitProfessionals(tries = 60, delay = 150) {
-        for (let i = 0; i < tries; i++) {
-            if (Array.isArray(state.PROFESSIONALS) && state.PROFESSIONALS.length) return true;
-            await new Promise((r) => setTimeout(r, delay));
-        }
-        return false;
-    }
-
     (async () => {
-        populateProfessionalSelects();
-        await waitProfessionals();
-        populateProfessionalSelects();
-
-        // força "todos"
-        if (profissionalSelect) {
-            const hasTodos = [...profissionalSelect.options].some((o) => o.value === "todos");
-            if (!hasTodos) {
-                const opt = document.createElement("option");
-                opt.value = "todos";
-                opt.textContent = "Todos";
-                profissionalSelect.insertBefore(opt, profissionalSelect.firstChild);
-            }
-            profissionalSelect.value = "todos";
+        try {
+            await fillHoraFiltroDynamic({ keepSelection: true });
+            await buscarAgenda();
+        } catch (err) {
+            console.error("Erro ao iniciar agenda:", err);
         }
-
-        await fillHoraFiltroDynamic({ keepSelection: false });
-        await buscarAgenda();
     })();
 }
