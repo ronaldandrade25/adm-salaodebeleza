@@ -178,6 +178,48 @@ modalEl?.addEventListener("click", (e) => {
 });
 
 /* ============================================================
+   ✅ Link de agendamento (menu lateral)
+============================================================ */
+function bindBookingLinkNav() {
+  const btn = $("#bookingLinkNavBtn");
+
+  btn?.addEventListener("click", () => {
+    mainModal.show({
+      title: "Link de agendamento",
+      body: `
+        <p>Compartilhe este link com seus clientes para que eles possam agendar horários online.</p>
+        <div style="margin-top:12px;padding:10px;border-radius:10px;border:1px solid rgba(148,163,184,0.6);background:#020617;font-size:.85rem">
+          <div style="color:#9ca3af;margin-bottom:4px">Endereço</div>
+          <a href="${BOOKING_URL}" target="_blank" rel="noopener" style="word-break:break-all;color:#a5b4fc">${BOOKING_URL}</a>
+        </div>
+      `,
+      buttons: [
+        { text: "Fechar", class: "btn-light" },
+        { text: "<i class='bx bx-link-external'></i> Abrir link", class: "btn", onClick: () => window.open(BOOKING_URL, "_blank", "noopener") },
+        {
+          text: "<i class='bx bx-copy'></i> Copiar link",
+          class: "btn-light",
+          onClick: async () => {
+            try {
+              await navigator.clipboard.writeText(BOOKING_URL);
+            } catch {
+              const ta = document.createElement("textarea");
+              ta.value = BOOKING_URL;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand("copy");
+              ta.remove();
+            }
+            showNotification("Link copiado!");
+            return false;
+          },
+        },
+      ],
+    });
+  });
+}
+
+/* ============================================================
    ✅ Modal "Resumo geral / Despesas" (abre/fecha)
 ============================================================ */
 function bindResumoGeralModal() {
@@ -243,7 +285,7 @@ export async function waitForAuth() {
 }
 
 /* ========= Estado compartilhado ========= */
-export const BOOKING_URL = ""; // link do site de agendamento externo (se houver)
+export const BOOKING_URL = "https://site-salaobeleza-vt.vercel.app/"; // link do site de agendamento externo
 
 export const PAYMENT_METHODS = [
   "PIX",
@@ -585,11 +627,13 @@ async function init() {
   tabBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
       const tab = btn.dataset.tab;
+      if (!tab) return;
       showTab(tab);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
 
+  bindBookingLinkNav();
   bindResumoGeralModal();
 
   await waitForAuth();
