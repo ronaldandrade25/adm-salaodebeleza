@@ -1,0 +1,189 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ----
+    function isYmd(s) { 
+      return s is string && s.matches('^\\d{4}-\\d{2}-\\d{2}$'); 
+    }
+
+    function isHHmm(s){ 
+      return s is string && s.matches('^\\d{2}:\\d{2}$'); 
+    }
+
+    function panelOpen() {
+      return request.time < timestamp.date(2027, 1, 1);
+    }
+
+    function isReservasCollection(name) {
+      return name is string && name.matches('^reservas_[a-z0-9_]+$');
+    }
+
+    // ========= CONFIG =========
+    match /config/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= SERVIÇOS =========
+    match /servicos/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= PROFISSIONAIS =========
+    match /profissionais/{doc} {
+      allow read, create, update, delete: if true;
+
+      // EXCEÇÕES POR PROFISSIONAL
+      match /excecoes/{exId} {
+        allow read, create, update, delete: if true;
+      }
+    }
+
+    // ========= EXCEÇÕES GERAIS DO SALÃO =========
+    match /excecoes/{exId} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ✅ Caminho que seu firebase.js usa:
+    // /config/excecoes/dias/{ymd}
+    match /config/excecoes/dias/{exId} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ✅ Mantido também caso algum trecho antigo ainda use:
+    match /config/{cfgId}/excecoes/{exId} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= AGENDA =========
+    match /{colecaoReservas}/{docId} {
+      // leitura pública apenas para coleções reservas_*
+      allow read: if isReservasCollection(colecaoReservas);
+
+      // create público/site/adm com validação mínima
+      allow create: if isReservasCollection(colecaoReservas)
+        && isYmd(request.resource.data.data)
+        && isHHmm(request.resource.data.hora)
+        && !exists(/databases/$(database)/documents/$(colecaoReservas)/$(docId));
+
+      // update/delete liberado sem login
+      allow update, delete: if isReservasCollection(colecaoReservas);
+    }
+
+    // ========= RA CLUB =========
+    match /raclub_clients/{doc} {
+      allow read, write: if true;
+    }
+
+    match /raclub_payments/{doc} {
+      allow read, write: if true;
+    }
+
+    // ========= PRODUTOS =========
+    match /produtos/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= PDV =========
+    match /pdv_sales/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= DESPESAS =========
+    match /rabarbearia_expenses/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= DESPESAS (coleção usada no firebase.js) =========
+    match /despesas/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= VENDAS (coleção usada no firebase.js) =========
+    match /vendas/{doc} {
+      allow read, create, update, delete: if true;
+    }
+
+    // ========= CONTAS A PAGAR =========
+    match /contas_apagar/{docId} {
+      allow read: if true;
+
+      allow create: if
+        request.resource.data.fornecedor is string
+        && request.resource.data.fornecedor.size() > 0
+
+        // descrição opcional
+        && (
+          !('descricao' in request.resource.data)
+          || request.resource.data.descricao is string
+        )
+
+        // categoria opcional
+        && (
+          !('categoria' in request.resource.data)
+          || request.resource.data.categoria is string
+        )
+
+        // groupId obrigatório
+        && request.resource.data.groupId is string
+        && request.resource.data.groupId.size() > 0
+
+        // valores obrigatórios
+        && request.resource.data.valorTotal is number
+        && request.resource.data.valorTotal >= 0
+        && request.resource.data.valorParcela is number
+        && request.resource.data.valorParcela >= 0
+
+        // parcelas obrigatórias
+        && request.resource.data.parcelas is number
+        && request.resource.data.parcelas >= 1
+        && request.resource.data.parcelaAtual is number
+        && request.resource.data.parcelaAtual >= 1
+        && request.resource.data.parcelaAtual <= request.resource.data.parcelas
+
+        // forma de pagamento opcional
+        && (
+          !('formaPagamento' in request.resource.data)
+          || request.resource.data.formaPagamento is string
+        )
+
+        // datas obrigatórias no formato yyyy-mm-dd
+        && request.resource.data.dataPrimeiroVencimento is string
+        && isYmd(request.resource.data.dataPrimeiroVencimento)
+        && request.resource.data.dataVencimento is string
+        && isYmd(request.resource.data.dataVencimento)
+
+        // status obrigatório
+        && request.resource.data.status is string
+        && (
+          request.resource.data.status == "pendente"
+          || request.resource.data.status == "pago"
+        )
+
+        // pagoEm opcional
+        && (
+          !('pagoEm' in request.resource.data)
+          || request.resource.data.pagoEm is timestamp
+          || request.resource.data.pagoEm == null
+        )
+
+        // timestamps opcionais
+        && (
+          !('createdAt' in request.resource.data)
+          || request.resource.data.createdAt is timestamp
+        )
+        && (
+          !('updatedAt' in request.resource.data)
+          || request.resource.data.updatedAt is timestamp
+        );
+
+      allow update: if true;
+      allow delete: if true;
+    }
+
+    // ---- bloqueio padrão ----
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

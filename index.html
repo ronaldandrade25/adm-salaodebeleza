@@ -19,6 +19,49 @@
 </head>
 
 <body>
+    <!-- 🔒 Auth Gate (login Firebase) -->
+    <div id="authGate" class="authgate">
+        <form id="authGateForm" class="authgate-box" autocomplete="on">
+            <img src="./assets/logo-salao.png" alt="Logo" class="authgate-logo" />
+            <h1>Salão de Beleza</h1>
+            <p class="authgate-subtitle">Entre com seu e-mail e senha para acessar o painel.</p>
+
+            <label for="authEmail">E-mail</label>
+            <input id="authEmail" type="email" placeholder="seu@email.com" autocomplete="username" required />
+
+            <label for="authPassword">Senha</label>
+            <input id="authPassword" type="password" placeholder="••••••••" autocomplete="current-password" required />
+
+            <p id="authGateError" class="authgate-error hidden"></p>
+
+            <button type="submit" id="authGateSubmit" class="authgate-submit">Entrar</button>
+        </form>
+    </div>
+
+    <button type="button" id="logoutBtn" class="authgate-logout-btn hidden">
+        <i class="bx bx-log-out"></i> Sair
+    </button>
+
+    <style>
+        .authgate { position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at top, #111827, #020617); padding: 20px; }
+        .authgate.hidden { display: none; }
+        .authgate-box { width: 100%; max-width: 360px; background: #0b1220; border: 1px solid rgba(148,163,184,0.18); border-radius: 16px; padding: 32px 28px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: flex; flex-direction: column; gap: 6px; }
+        .authgate-logo { width: 56px; height: 56px; object-fit: contain; border-radius: 12px; margin: 0 auto 10px; display: block; }
+        .authgate-box h1 { color: #f8fafc; font-size: 1.2rem; text-align: center; margin: 0 0 4px; }
+        .authgate-subtitle { color: #94a3b8; font-size: 0.85rem; text-align: center; margin: 0 0 18px; }
+        .authgate-box label { color: #cbd5e1; font-size: 0.8rem; margin-top: 10px; }
+        .authgate-box input { background: #020617; border: 1px solid rgba(148,163,184,0.3); border-radius: 8px; padding: 10px 12px; color: #f8fafc; font-size: 0.9rem; margin-top: 4px; }
+        .authgate-box input:focus { outline: none; border-color: #6366f1; }
+        .authgate-error { color: #f87171; font-size: 0.8rem; margin: 10px 0 0; }
+        .authgate-error.hidden { display: none; }
+        .authgate-submit { margin-top: 20px; padding: 11px; border: none; border-radius: 8px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; font-weight: 600; font-size: 0.9rem; cursor: pointer; }
+        .authgate-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+        .authgate-submit:hover:not(:disabled) { filter: brightness(1.08); }
+        .authgate-logout-btn { position: fixed; top: 14px; right: 14px; z-index: 9998; display: flex; align-items: center; gap: 6px; background: #0b1220; border: 1px solid rgba(148,163,184,0.3); color: #e2e8f0; padding: 8px 14px; border-radius: 999px; font-size: 0.85rem; cursor: pointer; }
+        .authgate-logout-btn.hidden { display: none; }
+        .authgate-logout-btn:hover { border-color: #f87171; color: #f87171; }
+    </style>
+
     <!-- Notificações (toasts) -->
     <div id="notification-container"></div>
 
