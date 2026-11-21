@@ -527,7 +527,6 @@ export function initAgendaTab() {
               </div>
               <div>${a.servico}${durLabel}</div>
               <div>${(Number(a.valor) || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })} • ${a.pagamentoForma || "Forma não informada"}</div>
-              ${a.raclub ? `<span class="timeslot-badge">RA Club</span>` : ""}
               <div style="color:#94a3b8;font-size:.85em;margin-top:6px">
                 Ocupa: ${occ.apptStartHH}–${occ.apptEndHH}
               </div>
@@ -702,9 +701,6 @@ export function initAgendaTab() {
               ${PAYMENT_METHODS.map((m) => `<option>${m}</option>`).join("")}
             </select>
           </div>
-          <div class="field">
-            <label><input id="newRaclub" type="checkbox" /> Cliente é do RA Club</label>
-          </div>
         </div>
       `,
             buttons: [
@@ -723,7 +719,6 @@ export function initAgendaTab() {
                         const servico = $("#newServico").value.trim() || "Serviço";
                         const valor = Number($("#newValor").value || 0);
                         const forma = $("#newForma").value || "Outro";
-                        const raclub = $("#newRaclub").checked;
                         const ymd = dataFiltro.value;
                         const tempoMin = Number($("#newTempoMin")?.value || 30) || 30;
 
@@ -777,7 +772,7 @@ export function initAgendaTab() {
                                     servicoTempoMin: tempoMin,
                                     valor,
                                     pagamentoForma: forma,
-                                    raclub: { status: raclub ? "membro" : "nao" },
+                                    raclub: { status: "nao" },
                                     updatedAt: serverTimestamp(),
                                     createdAt: serverTimestamp(),
                                 },
@@ -867,12 +862,6 @@ export function initAgendaTab() {
                 ${PAYMENT_METHODS.map((m) => `<option ${v.pagamentoForma === m ? "selected" : ""}>${m}</option>`).join("")}
               </select>
             </div>
-            <div class="field">
-              <label>
-                <input id="editRaclub" type="checkbox" ${v?.raclub?.status === "membro" ? "checked" : ""}/>
-                Cliente é do RA Club
-              </label>
-            </div>
           </div>
         `,
                 buttons: [
@@ -891,7 +880,6 @@ export function initAgendaTab() {
                             const servico = $("#editServico").value.trim() || "Serviço";
                             const valor = Number($("#editValor").value || 0);
                             const forma = $("#editForma").value || "Outro";
-                            const raclub = $("#editRaclub").checked;
                             const tempoMin = Number($("#editTempoMin")?.value || 30) || 30;
 
                             try {
@@ -939,7 +927,7 @@ export function initAgendaTab() {
                                 servicoTempoMin: tempoMin,
                                 valor,
                                 pagamentoForma: forma,
-                                raclub: { status: raclub ? "membro" : "nao" },
+                                raclub: v?.raclub || { status: "nao" },
                                 updatedAt: serverTimestamp(),
                             };
 
