@@ -47,12 +47,12 @@ import { initContasAPagarTab } from "./contasapagar.js";
 
 /* ========= Firebase ========= */
 const firebaseConfig = {
-  apiKey: "", // COLOQUE_SUA_API_KEY_AQUI
-  authDomain: "", // COLOQUE_SEU_AUTH_DOMAIN_AQUI
-  projectId: "", // COLOQUE_SEU_PROJECT_ID_AQUI
-  storageBucket: "", // COLOQUE_SEU_STORAGE_BUCKET_AQUI
-  messagingSenderId: "", // COLOQUE_SEU_MESSAGING_SENDER_ID_AQUI
-  appId: "" // COLOQUE_SEU_APP_ID_AQUI
+ apiKey: "AIzaSyCNCABN6R4yLP8vTVpYSsVyvdwpLlKdrVU",
+  authDomain: "operacao50k.firebaseapp.com",
+  projectId: "operacao50k",
+  storageBucket: "operacao50k.firebasestorage.app",
+  messagingSenderId: "512212492127",
+  appId: "1:512212492127:web:07c6a83ac787e8d79260ea"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -364,7 +364,7 @@ export const PAYMENT_METHODS = [
 ];
 
 // ✅ fallback
-export const ONLY_PRO = { label: "Rodrigo Torre2", colecao: "reservas_rodrigotorre2" };
+export const ONLY_PRO = { label: "Nenhum profissional cadastrado", colecao: "reservas_sem_profissional" };
 
 export const state = {
   BUSINESS_HOURS: { inicio: "09:00", fim: "19:00" },

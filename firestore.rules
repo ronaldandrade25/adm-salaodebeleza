@@ -11,8 +11,11 @@ service cloud.firestore {
       return s is string && s.matches('^\\d{2}:\\d{2}$'); 
     }
 
-    function panelOpen() {
-      return request.time < timestamp.date(2027, 1, 1);
+    // ✅ E-mail do administrador (único lugar onde ele é configurado).
+    // Troque pelo e-mail cadastrado em Authentication > Users.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == "seu-email@exemplo.com";
     }
 
     function isReservasCollection(name) {
@@ -21,38 +24,38 @@ service cloud.firestore {
 
     // ========= CONFIG =========
     match /config/{doc} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
     }
 
     // ========= SERVIÇOS =========
     match /servicos/{doc} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
     }
 
     // ========= PROFISSIONAIS =========
     match /profissionais/{doc} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
 
       // EXCEÇÕES POR PROFISSIONAL
       match /excecoes/{exId} {
-        allow read, create, update, delete: if true;
+        allow read: if true; allow create, update, delete: if isAdmin();
       }
     }
 
     // ========= EXCEÇÕES GERAIS DO SALÃO =========
     match /excecoes/{exId} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
     }
 
     // ✅ Caminho que seu firebase.js usa:
     // /config/excecoes/dias/{ymd}
     match /config/excecoes/dias/{exId} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
     }
 
     // ✅ Mantido também caso algum trecho antigo ainda use:
     match /config/{cfgId}/excecoes/{exId} {
-      allow read, create, update, delete: if true;
+      allow read: if true; allow create, update, delete: if isAdmin();
     }
 
     // ========= AGENDA =========
@@ -72,43 +75,43 @@ service cloud.firestore {
 
     // ========= RA CLUB =========
     match /raclub_clients/{doc} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
 
     match /raclub_payments/{doc} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= PRODUTOS =========
     match /produtos/{doc} {
-      allow read, create, update, delete: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= PDV =========
     match /pdv_sales/{doc} {
-      allow read, create, update, delete: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= DESPESAS =========
     match /rabarbearia_expenses/{doc} {
-      allow read, create, update, delete: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= DESPESAS (coleção usada no firebase.js) =========
     match /despesas/{doc} {
-      allow read, create, update, delete: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= VENDAS (coleção usada no firebase.js) =========
     match /vendas/{doc} {
-      allow read, create, update, delete: if true;
+      allow read, write: if isAdmin();
     }
 
     // ========= CONTAS A PAGAR =========
     match /contas_apagar/{docId} {
-      allow read: if true;
+      allow read: if isAdmin();
 
-      allow create: if
+      allow create: if isAdmin() &&
         request.resource.data.fornecedor is string
         && request.resource.data.fornecedor.size() > 0
 
@@ -177,8 +180,8 @@ service cloud.firestore {
           || request.resource.data.updatedAt is timestamp
         );
 
-      allow update: if true;
-      allow delete: if true;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     // ---- bloqueio padrão ----
