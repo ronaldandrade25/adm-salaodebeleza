@@ -9,6 +9,7 @@ import {
   addDoc, setDoc, deleteDoc, doc, getDoc,
   onSnapshot, query, orderBy,
   collection,
+  storage, ref, uploadBytes, getDownloadURL,
 
   // ✅ EXCEÇÕES (NOVO PADRÃO CORRETO)
   CFG_COL_EXCECOES,
@@ -60,7 +61,7 @@ export function initConfiguracoesTab() {
     const profEditId = await waitEl("#profEditId");
     const profNomeInput = await waitEl("#profNome");
 
-    // ✅ não usamos mais arquivo (se existir no HTML antigo, escondemos)
+    // ✅ foto do profissional é enviada por arquivo (Firebase Storage)
     const profFotoFileInput = await waitEl("#profFotoFile");
 
     const profWppInput = await waitEl("#profWpp");
@@ -69,8 +70,6 @@ export function initConfiguracoesTab() {
     const profCancelarEdicaoBtn = await waitEl("#profCancelarEdicao");
     const profTbody = await waitEl("#profTbody");
 
-    // ✅ URL continua existindo, mas agora é opcional (pode salvar sem)
-    const profFotoUrlInput = await waitEl("#profFotoUrl");
 
     // ===== Serviços =====
     const svcNomeInput = await waitEl("#svcNome");
@@ -98,14 +97,21 @@ export function initConfiguracoesTab() {
       return String(wpp || "").trim().replace(/\D+/g, "");
     }
 
-    function normalizeUrl(url) {
-      const u = String(url || "").trim();
-      if (!u) return "";
-      if (u.startsWith("data:image")) return "";
-      if (!/^https?:\/\//i.test(u)) return "";
-      return u;
+    // Envia a foto escolhida para o Storage e devolve a URL de download ("" se não houver arquivo)
+    async function uploadProfFoto(file, nome) {
+      if (!file) return "";
+      if (!file.type || !file.type.startsWith("image/")) {
+        throw new Error("O arquivo precisa ser uma imagem.");
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("A imagem deve ter no máximo 5 MB.");
+      }
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      const path = `profissionais/${slugify(nome) || "foto"}-${Date.now()}.${ext}`;
+      const fileRef = ref(storage, path);
+      await uploadBytes(fileRef, file, { contentType: file.type });
+      return await getDownloadURL(fileRef);
     }
-
     function normalizeTimeOrEmpty(t) {
       const v = String(t || "").trim();
       if (!v) return "";
@@ -184,27 +190,12 @@ export function initConfiguracoesTab() {
       if (profWppInput) profWppInput.value = "";
       if (profAtivoInput) profAtivoInput.checked = true;
 
-      if (profFotoFileInput) {
-        profFotoFileInput.value = "";
-        const field = profFotoFileInput.closest(".field");
-        if (field) field.style.display = "none";
-      }
-
-      if (profFotoUrlInput) profFotoUrlInput.value = "";
+      if (profFotoFileInput) profFotoFileInput.value = "";
       if (profSalvarBtn) profSalvarBtn.textContent = "Salvar profissional";
     }
 
     function hideFileInputsEverywhere() {
-      if (profFotoFileInput) {
-        const field = profFotoFileInput.closest(".field");
-        if (field) field.style.display = "none";
-      }
-
-      const mFile = document.getElementById("mProfFoto");
-      if (mFile) {
-        const field = mFile.closest(".field");
-        if (field) field.style.display = "none";
-      }
+      // campos de arquivo ficam visíveis (upload de foto)
     }
 
     // =========================
@@ -433,8 +424,8 @@ export function initConfiguracoesTab() {
                 }
               </div>
 
-              <input id="mProfFotoUrl" value="${escapeHtml(fotoUrl)}" placeholder="https://link-da-foto.jpg (opcional)" />
-              <small class="muted">A foto é opcional. Se quiser, cole uma URL https.</small>
+              <input id="mProfFoto" type="file" accept="image/*" />
+              <small class="muted">Opcional. Escolha um arquivo de imagem (até 5 MB) para trocar a foto.</small>
             </div>
 
             <div class="field">
@@ -458,7 +449,7 @@ export function initConfiguracoesTab() {
                 const wppNew = normalizeWpp($("#mProfWpp")?.value || "");
                 const ativoNew = !!$("#mProfAtivo")?.checked;
 
-                const urlTyped = normalizeUrl($("#mProfFotoUrl")?.value || "");
+                const fotoFile = $("#mProfFoto")?.files?.[0] || null;
 
                 if (!nomeNew) {
                   showNotification("Informe o nome do profissional.", "error");
@@ -477,7 +468,8 @@ export function initConfiguracoesTab() {
                   setDoc(doc(db, "profissionais", profId), updateData, { merge: true })
                 );
 
-                if (urlTyped) {
+                if (fotoFile) {
+                  const urlTyped = await uploadProfFoto(fotoFile, nomeNew);
                   await runWithQuickRetry(() =>
                     setDoc(
                       doc(db, "profissionais", profId),
@@ -492,7 +484,7 @@ export function initConfiguracoesTab() {
               } catch (err) {
                 console.error(err);
                 if (isPermissionError(err)) showPermissionHint("salvar profissional");
-                else showNotification("Erro ao atualizar profissional.", "error");
+                else showNotification(err?.message?.includes("imagem") ? err.message : "Erro ao atualizar profissional.", "error");
                 return false;
               }
             },
@@ -561,9 +553,11 @@ export function initConfiguracoesTab() {
         const nome = (profNomeInput?.value || "").trim();
         const whatsapp = normalizeWpp(profWppInput?.value || "");
         const ativo = !!profAtivoInput?.checked;
-        const urlTyped = normalizeUrl(profFotoUrlInput?.value || "");
+        const fotoFile = profFotoFileInput?.files?.[0] || null;
 
         if (!nome) return showNotification("Informe o nome do profissional.", "error");
+
+        const urlTyped = await uploadProfFoto(fotoFile, nome);
 
         const defaultColecao = `reservas_${slugify(nome)}`;
 
@@ -610,7 +604,7 @@ export function initConfiguracoesTab() {
       } catch (err) {
         console.error(err);
         if (isPermissionError(err)) showPermissionHint("salvar profissional");
-        else showNotification("Erro ao salvar profissional.", "error");
+        else showNotification(err?.message?.includes("imagem") ? err.message : "Erro ao salvar profissional.", "error");
       }
     });
 
