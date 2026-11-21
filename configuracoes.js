@@ -9,7 +9,6 @@ import {
   addDoc, setDoc, deleteDoc, doc, getDoc,
   onSnapshot, query, orderBy,
   collection,
-  storage, ref, uploadBytes, getDownloadURL,
 
   // ✅ EXCEÇÕES (NOVO PADRÃO CORRETO)
   CFG_COL_EXCECOES,
@@ -97,21 +96,38 @@ export function initConfiguracoesTab() {
       return String(wpp || "").trim().replace(/\D+/g, "");
     }
 
-    // Envia a foto escolhida para o Storage e devolve a URL de download ("" se não houver arquivo)
-    async function uploadProfFoto(file, nome) {
+    // Redimensiona a foto escolhida (máx. 400px) e devolve como data URL JPEG,
+    // salva direto no Firestore (não usa Firebase Storage). "" se não houver arquivo.
+    async function uploadProfFoto(file) {
       if (!file) return "";
       if (!file.type || !file.type.startsWith("image/")) {
         throw new Error("O arquivo precisa ser uma imagem.");
       }
-      if (file.size > 5 * 1024 * 1024) {
-        throw new Error("A imagem deve ter no máximo 5 MB.");
+      const bitmapUrl = URL.createObjectURL(file);
+      try {
+        const img = await new Promise((resolve, reject) => {
+          const im = new Image();
+          im.onload = () => resolve(im);
+          im.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+          im.src = bitmapUrl;
+        });
+        const MAX = 400;
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        return canvas.toDataURL("image/jpeg", 0.82);
+      } finally {
+        URL.revokeObjectURL(bitmapUrl);
       }
-      const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-      const path = `profissionais/${slugify(nome) || "foto"}-${Date.now()}.${ext}`;
-      const fileRef = ref(storage, path);
-      await uploadBytes(fileRef, file, { contentType: file.type });
-      return await getDownloadURL(fileRef);
     }
+
     function normalizeTimeOrEmpty(t) {
       const v = String(t || "").trim();
       if (!v) return "";
@@ -425,7 +441,7 @@ export function initConfiguracoesTab() {
               </div>
 
               <input id="mProfFoto" type="file" accept="image/*" />
-              <small class="muted">Opcional. Escolha um arquivo de imagem (até 5 MB) para trocar a foto.</small>
+              <small class="muted">Opcional. Escolha um arquivo de imagem para trocar a foto.</small>
             </div>
 
             <div class="field">
@@ -469,7 +485,7 @@ export function initConfiguracoesTab() {
                 );
 
                 if (fotoFile) {
-                  const urlTyped = await uploadProfFoto(fotoFile, nomeNew);
+                  const urlTyped = await uploadProfFoto(fotoFile);
                   await runWithQuickRetry(() =>
                     setDoc(
                       doc(db, "profissionais", profId),
@@ -557,7 +573,7 @@ export function initConfiguracoesTab() {
 
         if (!nome) return showNotification("Informe o nome do profissional.", "error");
 
-        const urlTyped = await uploadProfFoto(fotoFile, nome);
+        const urlTyped = await uploadProfFoto(fotoFile);
 
         const defaultColecao = `reservas_${slugify(nome)}`;
 
